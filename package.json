@@ -1,0 +1,30 @@
+{
+  "name": "TinyChat",
+  "version": "0.0.1",
+  "description": "Chat using Express and Socket.io",
+  "private": true,
+  
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  
+  "dependencies": {
+    "express": "3.4.x",
+    "ejs": "0.8.x",
+    "socket.io": "0.9.x"
+  },
+  
+  "keywords": [
+    "small",
+    "tiny",
+    "tchat",
+    "chat",
+    "express",
+    "expressjs",
+    "socket.io",
+    "socketio"
+  ],
+  "author": "shichon64",
+  "license": "BSD-2-Clause"
+}

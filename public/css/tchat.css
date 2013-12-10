@@ -1,0 +1,61 @@
+html, body { width: 100%; height: 100%; }
+
+body { margin: 0; padding: 0; }
+
+
+/**
+ * Liste des utilisateurs
+ */
+.users-list {
+	height: 100%;
+	width : 10%;
+	display: inline-block;
+	background-color: #eee;
+	vertical-align: top;
+}
+
+.user { background-color: orange;
+	margin: 5px;
+	border-radius: 2px;
+	text-indent: 2px;
+}
+
+
+/**
+ * Contenu
+ */
+.content {
+	height: 100%;
+	width : 90%;
+	display: inline-block;
+}
+
+/**
+ * Une ligne / un message
+ */
+.message {
+	margin-top: 5px;
+	background-color: #eee;
+}
+
+.username,
+.text {
+	padding: 5px;
+	display: inline-block;
+}
+
+.username {
+	background-color: #000;
+	color: #fff;
+}
+
+
+/**
+ * Informations diverses
+ * (dé/connection d'un utilisateur, ...)
+ */
+.information {
+	margin: 5px 0;
+	font-style: italic;
+	text-indent: 20px;
+}
