@@ -1,0 +1,10 @@
+<% var user = null; %>
+<% for (var socketId in users) { %>
+	
+	<% user = users[ socketId ]; %>
+
+	<div class="user">
+		<%= user %>
+	</div>
+
+<% } %>

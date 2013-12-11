@@ -54,6 +54,7 @@ app
 var io = require('socket.io').listen(server);
 var tools = require('./tools');
 var fs = require('fs');
+var viewsPath = __dirname + '/views';
 var historique = [];
 var users = {};
 
@@ -61,57 +62,73 @@ var users = {};
 io.sockets.on('connection', function (socket) {
 
 	// When a new user is connected
-	socket.on('new-connection', function (userPseudo) {
-
-		var connectionInfos = {
-			when: tools.getDate(),
-			who : userPseudo
-		};
+	socket.on('new-connection', function (username) {
+tools.log(username + ' vient de se connecter.');
 
 
-		socket.set('pseudo', userPseudo);
+		socket.set('username', username); // Stocke pseudo pour la session
+		users[ socket.id ] = username;    // Colection <socket id/user pseudo>
 
 
-		// Hash <socket id/user pseudo>
-		users[ socket.id ] = userPseudo;
+		// Render template "listing users"
+		fs.readFile(viewsPath + '/user/list_all.ejs', 'utf8', function (error, tpl) {
 
-		historique.push({
-			type: 'info',
-			data: connectionInfos
+			if (error) { throw error; }
+
+			// Send to current request socket client
+			var html = ejs.render(tpl, { users: users });
+			socket.emit('get-users', html);
 		});
 
 
-		// Send to current request socket client
-		socket.emit('get-users', users);
-		socket.emit('get-history', historique);
-		// Send to all clients, except sender
-		socket.broadcast.emit('new-user-connected', connectionInfos);
+		// Render template "Connection info"
+		fs.readFile(viewsPath + '/user/connect.ejs', 'utf8', function (error, tplConnect) {
 
+			if (error) { throw error; }
 
-		tools.log(userPseudo + ' vient de se connecter.');
+			var htmlConnect = ejs.render(tplConnect, {
+				when: tools.getDate(),
+				who : username
+			});
+
+			historique.push({
+				type: 'info',
+				data: htmlConnect
+			});
+
+			// Send to current request socket client
+			socket.emit('get-history', historique);
+
+			// Render template "current user info"
+			fs.readFile(viewsPath + '/user/list_one.ejs', 'utf8', function (error, tplUser) {
+
+				if (error) { throw error; }
+
+				var htmlUser = ejs.render(tplUser, { who: username });
+
+				// Send to all clients, except sender
+				socket.broadcast.emit('new-user-connected', {
+					user: htmlUser,
+					connection: htmlConnect
+				});
+			});
+		});
 	});
 
 
 	// When new message arrive
-	socket.on('new-message', function (userMessage) {
+	socket.on('new-message', function (message) {
 
-		// Find who send it
-		socket.get('pseudo', function (error, userPseudo) {
+		// Find who sent it
+		socket.get('username', function (error, username) {
 
-			var tpl = fs.readFileSync(__dirname + '/views/message.ejs', 'utf8');
-			var html = tpl.render(str, { who: userPseudo, text: userMessage});
+			var tpl  = fs.readFileSync(viewsPath + '/message.ejs', 'utf8'),
+				html = ejs.render(tpl, { who: username, text: message });
 
-			// var messageInfo = {
-			// 	who: userPseudo,
-			// 	txt: userMessage
-			// };
-
-
-			// historique.push({
-			// 	type: 'message',
-			// 	data: messageInfo
-			// });
-
+			historique.push({
+				type: 'message',
+				data: html
+			});
 
 			// Send to all clients, include sender
 			io.sockets.emit('new-message-posted', html);
@@ -125,18 +142,20 @@ io.sockets.on('connection', function (socket) {
 		// On supprime l'utilisateur de la liste des utilisateurs
 		delete users[ socket.id ];
 
-		socket.get('pseudo', function (error, userPseudo) {
+		socket.get('username', function (error, username) {
 
-			if (userPseudo !== null) {
+			if (username !== null) {
 
-				var disconnectInfo = {
-					when: tools.getDate(),
-					who : userPseudo
-				};
+				var tplDisconnect  = fs.readFileSync(viewsPath + '/user/disconnect.ejs', 'utf8'),
+					htmlDisconnect = ejs.render(tplDisconnect, { when: tools.getDate(), who: username }),
+
+					tplUsers  = fs.readFileSync(viewsPath + '/user/list_all.ejs', 'utf8'),
+					htmlUsers = ejs.render(tplUsers, { users: users });
+
 
 				// Send to all clients, except sender
-				socket.broadcast.emit('refresh-users', users);
-				socket.broadcast.emit('user-disconnected', disconnectInfo);
+				socket.broadcast.emit('refresh-users', htmlUsers);
+				socket.broadcast.emit('user-disconnected', htmlDisconnect);
 			}
 		});
 	});
