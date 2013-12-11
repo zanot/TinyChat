@@ -16,7 +16,18 @@ var refreshUsers = function (data) {
 	users.innerHTML = data;
 };
 
+var sendMessage = function () {
+	var message = document.getElementById('message').value;
 
+	if (message !== '') {
+		socket.emit('new-message', message);
+	}
+};
+
+
+/**
+ * Méthodes pour la construction de données
+ */
 var buildItemUser = function (user) {
 	return '<div class="user">' + user + '</div>';
 };
@@ -44,13 +55,7 @@ var buildMessageLine = function (who, text) {
 /**
  * DOM Events
  */
-btnSend.onclick = function () {
-	var message = document.getElementById('message').value;
-
-	if (message !== '') {
-		socket.emit('new-message', message);
-	}
-};
+btnSend.onclick = sendMessage;
 
 
 /**
@@ -129,9 +134,9 @@ socket.on('get-history', function (history) {
  * de la part du serveur
  */
 socket.on('new-message-posted', function (messageInfo) {
-	var html = buildMessageLine(messageInfo.who, messageInfo.txt);
+	// var html = buildMessageLine(messageInfo.who, messageInfo.txt);
 
-	updateHistory(html);
+	updateHistory(messageInfo);
 });
 
 

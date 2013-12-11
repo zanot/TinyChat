@@ -1,6 +1,7 @@
 var express = require('express');
 var routes = require('./routes');
 var path = require('path');
+var ejs = require('ejs');
 var port = 8080;
 var app = express();
 var server = app.listen(port, function () {
@@ -24,7 +25,7 @@ app
 	// Which template engine to use
 	.set('view engine', 'ejs')
 	// Specifies the function that will process the template's code
-	.engine('ejs', require('ejs').renderFile)
+	.engine('ejs', ejs.renderFile)
 
 	// Use of an external JS file (will hold the front-end logic)
 	// --> need to inform Express where to look for such resources
@@ -52,6 +53,7 @@ app
  */
 var io = require('socket.io').listen(server);
 var tools = require('./tools');
+var fs = require('fs');
 var historique = [];
 var users = {};
 
@@ -96,20 +98,23 @@ io.sockets.on('connection', function (socket) {
 		// Find who send it
 		socket.get('pseudo', function (error, userPseudo) {
 
-			var messageInfo = {
-				who: userPseudo,
-				txt: userMessage
-			};
+			var tpl = fs.readFileSync(__dirname + '/views/message.ejs', 'utf8');
+			var html = tpl.render(str, { who: userPseudo, text: userMessage});
+
+			// var messageInfo = {
+			// 	who: userPseudo,
+			// 	txt: userMessage
+			// };
 
 
-			historique.push({
-				type: 'message',
-				data: messageInfo
-			});
+			// historique.push({
+			// 	type: 'message',
+			// 	data: messageInfo
+			// });
 
 
 			// Send to all clients, include sender
-			io.sockets.emit('new-message-posted', messageInfo);
+			io.sockets.emit('new-message-posted', html);
 		});
 	});
 
