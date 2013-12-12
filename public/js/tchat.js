@@ -3,8 +3,16 @@ var btnSend = document.getElementById('envoyer');
 var username = '';
 
 
+/**
+ * Fonctions en lien avec l'historique du tchat
+ */
 var _history = {
-	refresh: function (entries) {
+
+	/**
+	 * Parcourt des entrées d'historique
+	 * @param  {Array} entries Tableau d'entrées de l'historique
+	 */
+	browse: function (entries) {
 		var html  = '',
 			entry = null;
 
@@ -15,17 +23,35 @@ var _history = {
 
 		_history.update(html);
 	},
+
+	/**
+	 * Génère l'historique
+	 * @param  {string} newHtml HTML à générer
+	 */
 	update: function (newHtml) {
 		var h = document.getElementById('historique');
 		h.innerHTML = newHtml + h.innerHTML;
 	}
 };
 
+/**
+ * Fonctions en lien avec les utilisateurs
+ */
 var users = {
-	refresh: function (newHtml) {
+
+	/**
+	 * Affiche les utilisateurs connectés
+	 * @param  {string} newHtml HTML à générer
+	 */
+	display: function (newHtml) {
 		var users = document.getElementById('users-list');
 		users.innerHTML = newHtml;
 	},
+
+	/**
+	 * Met à jour les utilisateurs connectés
+	 * @param  {string} newHtml HTML à injecter
+	 */
 	update: function (newHtml) {
 		var users = document.getElementById('users-list');
 		users.innerHTML += newHtml;
@@ -33,7 +59,7 @@ var users = {
 };
 
 
-// Envoi d'un message au server
+// Envoi d'un message au serveur
 var sendMessage = function () {
 	var bloc = document.getElementById('message'),
 		message = bloc.value;
@@ -84,7 +110,7 @@ socket.on('get-users', users.update);
 /**
  * Quand un utilisateur se connecte : Réception de l'historique du tchat
  */
-socket.on('get-history', _history.refresh);
+socket.on('get-history', _history.browse);
 
 
 /**
@@ -96,7 +122,7 @@ socket.on('new-message-posted', _history.update);
 /**
  * Rafraîchissement de la liste des utilisateurs
  */
-socket.on('refresh-users', users.refresh);
+socket.on('refresh-users', users.display);
 
 
 /**
