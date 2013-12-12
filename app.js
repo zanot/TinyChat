@@ -63,7 +63,6 @@ io.sockets.on('connection', function (socket) {
 
 	// When a new user is connected
 	socket.on('new-connection', function (username) {
-tools.log(username + ' vient de se connecter.');
 
 
 		socket.set('username', username); // Stocke pseudo pour la session
@@ -71,12 +70,9 @@ tools.log(username + ' vient de se connecter.');
 
 
 		// Render template "listing users"
-		fs.readFile(viewsPath + '/user/list_all.ejs', 'utf8', function (error, tpl) {
-
-			if (error) { throw error; }
-
-			// Send to current request socket client
+		tools.generate(viewsPath + '/user/list_all.ejs', function (tpl) {
 			var html = ejs.render(tpl, { users: users });
+			// Send to current request socket client
 			socket.emit('get-users', html);
 		});
 
@@ -122,16 +118,21 @@ tools.log(username + ' vient de se connecter.');
 		// Find who sent it
 		socket.get('username', function (error, username) {
 
-			var tpl  = fs.readFileSync(viewsPath + '/message.ejs', 'utf8'),
-				html = ejs.render(tpl, { who: username, text: message });
+			// Render template "message"
+			fs.readFile(viewsPath + '/message.ejs', 'utf8', function (error, tpl) {
 
-			historique.push({
-				type: 'message',
-				data: html
+				if (error) { throw error; }
+
+				var html = ejs.render(tpl, { who: username, text: message });
+
+				historique.push({
+					type: 'message',
+					data: html
+				});
+
+				// Send to all clients, include sender
+				io.sockets.emit('new-message-posted', html);
 			});
-
-			// Send to all clients, include sender
-			io.sockets.emit('new-message-posted', html);
 		});
 	});
 
@@ -146,16 +147,33 @@ tools.log(username + ' vient de se connecter.');
 
 			if (username !== null) {
 
-				var tplDisconnect  = fs.readFileSync(viewsPath + '/user/disconnect.ejs', 'utf8'),
-					htmlDisconnect = ejs.render(tplDisconnect, { when: tools.getDate(), who: username }),
+				// Render template "disconnect"
+				fs.readFile(viewsPath + '/user/disconnect.ejs', 'utf8', function (error, tpl) {
+				
+					if (error) { throw error; }
 
-					tplUsers  = fs.readFileSync(viewsPath + '/user/list_all.ejs', 'utf8'),
-					htmlUsers = ejs.render(tplUsers, { users: users });
+					var html = ejs.render(tpl, { when: tools.getDate(), who: username });
+					
+					historique.push({
+						type: 'info',
+						data: html
+					});
+
+					// Send to all clients, except sender
+					socket.broadcast.emit('user-disconnected', html);
+				});
 
 
-				// Send to all clients, except sender
-				socket.broadcast.emit('refresh-users', htmlUsers);
-				socket.broadcast.emit('user-disconnected', htmlDisconnect);
+				// Render template "list all"
+				fs.readFile(viewsPath + '/user/list_all.ejs', 'utf8', function (error, tpl) {
+				
+					if (error) { throw error; }
+
+					var html = ejs.render(tpl, { users: users });
+					// Send to all clients, except sender
+					socket.broadcast.emit('refresh-users', html);
+				});
+
 			}
 		});
 	});
