@@ -2,15 +2,9 @@ var fs = require('fs');
 var ejs = require('ejs');
 var viewsPath = __dirname + '/views/';
 
-/**
- * Fonctions utiles
- */
+
 module.exports = {
 
-	/**
-	 * Console.log personnalisé
-	 * @param  {string} txt,	Texte à logger
-	 */
 	log: function (txt) {
 		console.log('[LOG] - ' + txt);
 	},
